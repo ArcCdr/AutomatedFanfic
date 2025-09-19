@@ -60,11 +60,11 @@ class bcolors:
         >>> print(f"{bcolors.OKGREEN}Success message{bcolors.ENDC}")
     """
 
-    HEADER = "\033[95m"  # Purple color for headers
-    OKBLUE = "\033[94m"  # Blue color for informational messages
-    OKGREEN = "\033[92m"  # Green color for success messages
-    WARNING = "\033[93m"  # Yellow color for warnings
-    FAIL = "\033[91m"  # Red color for errors and failures
+    HEADER = "\033[35m"  # Magenta color for headers (works on both backgrounds)
+    OKBLUE = "\033[34m"  # Dark blue color for informational messages
+    OKGREEN = "\033[32m"  # Dark green color for success messages
+    WARNING = "\033[33m"  # Dark yellow/brown color for warnings
+    FAIL = "\033[31m"  # Dark red color for errors and failures
     ENDC = "\033[0m"  # Reset/end color formatting
     BOLD = "\033[1m"  # Bold text formatting
     UNDERLINE = "\033[4m"  # Underline text formatting
