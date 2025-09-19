@@ -24,9 +24,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     curl \
     jq \
+    poppler-utils \
     libssl3 \
     openssl \
-    poppler-utils \
     python3-xdg \
     uuid-runtime \
     xz-utils && \
@@ -101,32 +101,30 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     fi && \
     echo "*** Setting up Calibre symlinks (calibredb only) ***" && \
     find /opt/calibre -name "calibredb" -type f -executable -exec ln -sf {} /usr/local/bin/calibredb \; && \
-    # Configure library path for Calibre shared libraries
-    echo "/opt/calibre/lib" >> /etc/ld.so.conf.d/calibre.conf && \
-    echo "/opt/calibre" >> /etc/ld.so.conf.d/calibre.conf && \
-    find /opt/calibre -name "*.so*" -type f -exec dirname {} \; | sort -u | while read libdir; do \
-        echo "$libdir" >> /etc/ld.so.conf.d/calibre.conf; \
-    done && \
-    ldconfig && \
-    echo "*** Calibre library configuration complete ***" && \
-    echo "*** Minimal Calibre cleanup - preserving calibredb dependencies ***" && \
-    # Only remove the most obvious GUI applications, keep everything else for safety
+    echo "*** Removing unnecessary Calibre components ***" && \
+    # Remove GUI applications (keep calibredb)
     rm -f /opt/calibre/calibre /opt/calibre/ebook-viewer /opt/calibre/ebook-edit 2>/dev/null || true && \
-    rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp 2>/dev/null || true && \
-    # Remove only GUI Python packages that are clearly not needed
+    # Remove conversion tools  
+    rm -f /opt/calibre/ebook-convert /opt/calibre/ebook-meta /opt/calibre/ebook-polish 2>/dev/null || true && \
+    # Remove other command-line tools we don't use
+    rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp /opt/calibre/web2disk 2>/dev/null || true && \
+    rm -f /opt/calibre/lrf2lrs /opt/calibre/lrfviewer /opt/calibre/markdown-calibre 2>/dev/null || true && \
+    # Remove GUI Python packages and Qt libraries (preserve core database libraries)
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/gui2 2>/dev/null || true && \
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/srv 2>/dev/null || true && \
-    # Remove only viewer/editor resources, keep everything else
+    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/conversion 2>/dev/null || true && \
+    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/oeb 2>/dev/null || true && \
+    rm -rf /opt/calibre/lib/python*/site-packages/calibre/devices 2>/dev/null || true && \
+    # Remove Qt and GUI libraries (keep core libraries)
+    find /opt/calibre -name "*Qt*" -type f -delete 2>/dev/null || true && \
+    find /opt/calibre -name "*qt*" -type f -delete 2>/dev/null || true && \
+    find /opt/calibre -name "PyQt*" -type d -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove resource directories for GUI components
     rm -rf /opt/calibre/resources/viewer 2>/dev/null || true && \
     rm -rf /opt/calibre/resources/editor 2>/dev/null || true && \
-    # Verify calibredb can run after cleanup
-    echo "*** Testing calibredb functionality ***" && \
-    /opt/calibre/calibredb --version && \
-    echo "*** Calibredb test successful ***" && \
-    # Show what libraries are available
-    echo "*** Available Calibre libraries ***" && \
-    find /opt/calibre -name "*.so*" -type f 2>/dev/null | head -20 && \
-    echo "*** Minimal Calibre cleanup complete ***" \
+    rm -rf /opt/calibre/resources/content-server 2>/dev/null || true && \
+    rm -rf /opt/calibre/resources/images/mimetypes 2>/dev/null || true && \
+    echo "*** Calibre cleanup complete - calibredb only installation ***" \
     ;; \
     "linux/arm64"|"linux/arm/v7"|"linux/arm/v6") \
     echo "Installing Calibre from system packages for ARM architecture (calibredb only)" && \
@@ -135,10 +133,12 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     # Create consistent symlink for ARM (calibredb only)
     ln -sf /usr/bin/calibredb /usr/local/bin/calibredb && \
     echo "*** Removing unnecessary Calibre components from system installation ***" && \
-    # Remove GUI applications and conversion tools (keep calibredb and essential dependencies)
-    rm -f /usr/bin/calibre /usr/bin/ebook-convert /usr/bin/ebook-edit /usr/bin/ebook-polish 2>/dev/null || true && \
-    rm -f /usr/bin/ebook-viewer /usr/bin/lrf* /usr/bin/web2disk 2>/dev/null || true && \
-    # Don't remove calibre-bin package as it may contain essential libraries for calibredb
+    # Remove GUI applications and conversion tools
+    rm -f /usr/bin/calibre /usr/bin/ebook-* /usr/bin/lrf* /usr/bin/web2disk 2>/dev/null || true && \
+    rm -f /usr/bin/*viewer* /usr/bin/*editor* 2>/dev/null || true && \
+    # Remove GUI-related packages if they were installed as dependencies
+    apt-get remove --purge -y calibre-bin 2>/dev/null || true && \
+    apt-get autoremove -y 2>/dev/null || true && \
     echo "*** ARM Calibre cleanup complete ***" \
     ;; \
     *) \
@@ -148,9 +148,10 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     apt-get install -y --no-install-recommends calibre && \
     ln -sf /usr/bin/calibredb /usr/local/bin/calibredb && \
     echo "*** Removing unnecessary Calibre components from fallback installation ***" && \
-    # Remove GUI applications and conversion tools (keep calibredb and essential dependencies)
-    rm -f /usr/bin/calibre /usr/bin/ebook-convert /usr/bin/ebook-edit /usr/bin/ebook-polish 2>/dev/null || true && \
-    rm -f /usr/bin/ebook-viewer /usr/bin/lrf* /usr/bin/web2disk 2>/dev/null || true && \
+    # Remove GUI applications and conversion tools
+    rm -f /usr/bin/calibre /usr/bin/ebook-* /usr/bin/lrf* /usr/bin/web2disk 2>/dev/null || true && \
+    rm -f /usr/bin/*viewer* /usr/bin/*editor* 2>/dev/null || true && \
+    apt-get autoremove -y 2>/dev/null || true && \
     echo "*** Fallback Calibre cleanup complete ***" \
     ;; \
     esac && \
@@ -162,26 +163,18 @@ FROM calibre-installer AS fanficfare-installer
 ARG FANFICFARE_VERSION
 RUN --mount=type=cache,target=/root/.cache/pip \
     set -e && \
-    echo "*** Checking SSL support ***" && \
-    python3 -c "import ssl; print('SSL support available')" && \
-    echo "*** Install FanFicFare ***" && \
-    # Try TestPyPI first, then fallback to regular PyPI
+    echo "*** Install FanFicFare from TestPyPI ***" && \
+    INDEX_URL="https://test.pypi.org/simple/" && \
+    # Determine package specification
     if [ -n "${FANFICFARE_VERSION}" ]; then \
-        PACKAGE_SPEC="FanFicFare==${FANFICFARE_VERSION}" && \
-        echo "Installing FanFicFare==${FANFICFARE_VERSION}" ; \
+    PACKAGE_SPEC="FanFicFare==${FANFICFARE_VERSION}" && \
+    echo "Installing FanFicFare==${FANFICFARE_VERSION} from TestPyPI" ; \
     else \
-        PACKAGE_SPEC="FanFicFare" && \
-        echo "Installing latest FanFicFare" ; \
+    PACKAGE_SPEC="FanFicFare" && \
+    echo "Installing latest FanFicFare from TestPyPI" ; \
     fi && \
-    # Try TestPyPI first
-    echo "*** Attempting TestPyPI installation ***" && \
-    if pip install --no-cache-dir -i "https://test.pypi.org/simple/" --extra-index-url "https://pypi.org/simple/" "${PACKAGE_SPEC}"; then \
-        echo "*** FanFicFare installed from TestPyPI ***" ; \
-    else \
-        echo "*** TestPyPI failed, trying regular PyPI ***" && \
-        pip install --no-cache-dir "${PACKAGE_SPEC}" && \
-        echo "*** FanFicFare installed from PyPI ***" ; \
-    fi && \
+    # Install package
+    pip install --no-cache-dir -i "${INDEX_URL}" "${PACKAGE_SPEC}" && \
     echo "*** FanFicFare installation complete ***"
 
 # Stage 6: Application code (changes with every code update)
