@@ -101,30 +101,30 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     fi && \
     echo "*** Setting up Calibre symlinks (calibredb only) ***" && \
     find /opt/calibre -name "calibredb" -type f -executable -exec ln -sf {} /usr/local/bin/calibredb \; && \
-    echo "*** Removing unnecessary Calibre components ***" && \
+    # echo "*** Removing unnecessary Calibre components ***" && \
     # Remove GUI applications (keep calibredb)
-    rm -f /opt/calibre/calibre /opt/calibre/ebook-viewer /opt/calibre/ebook-edit 2>/dev/null || true && \
+    # rm -f /opt/calibre/calibre /opt/calibre/ebook-viewer /opt/calibre/ebook-edit 2>/dev/null || true && \
     # Remove conversion tools  
-    rm -f /opt/calibre/ebook-convert /opt/calibre/ebook-meta /opt/calibre/ebook-polish 2>/dev/null || true && \
+    # rm -f /opt/calibre/ebook-convert /opt/calibre/ebook-meta /opt/calibre/ebook-polish 2>/dev/null || true && \
     # Remove other command-line tools we don't use
-    rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp /opt/calibre/web2disk 2>/dev/null || true && \
-    rm -f /opt/calibre/lrf2lrs /opt/calibre/lrfviewer /opt/calibre/markdown-calibre 2>/dev/null || true && \
+    # rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp /opt/calibre/web2disk 2>/dev/null || true && \
+    # rm -f /opt/calibre/lrf2lrs /opt/calibre/lrfviewer /opt/calibre/markdown-calibre 2>/dev/null || true && \
     # Remove GUI Python packages and Qt libraries (preserve core database libraries)
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/gui2 2>/dev/null || true && \
+    # rm -rf /opt/calibre/lib/python*/site-packages/calibre/gui2 2>/dev/null || true && \
     # rm -rf /opt/calibre/lib/python*/site-packages/calibre/srv 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/conversion 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/oeb 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/devices 2>/dev/null || true && \
+    # rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/conversion 2>/dev/null || true && \
+    # rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/oeb 2>/dev/null || true && \
+    # rm -rf /opt/calibre/lib/python*/site-packages/calibre/devices 2>/dev/null || true && \
     # Remove Qt and GUI libraries (keep core libraries)
-    find /opt/calibre -name "*Qt*" -type f -delete 2>/dev/null || true && \
-    find /opt/calibre -name "*qt*" -type f -delete 2>/dev/null || true && \
-    find /opt/calibre -name "PyQt*" -type d -exec rm -rf {} + 2>/dev/null || true && \
+    # find /opt/calibre -name "*Qt*" -type f -delete 2>/dev/null || true && \
+    # find /opt/calibre -name "*qt*" -type f -delete 2>/dev/null || true && \
+    # find /opt/calibre -name "PyQt*" -type d -exec rm -rf {} + 2>/dev/null || true && \
     # Remove resource directories for GUI components
-    rm -rf /opt/calibre/resources/viewer 2>/dev/null || true && \
-    rm -rf /opt/calibre/resources/editor 2>/dev/null || true && \
+    # rm -rf /opt/calibre/resources/viewer 2>/dev/null || true && \
+    # rm -rf /opt/calibre/resources/editor 2>/dev/null || true && \
     # rm -rf /opt/calibre/resources/content-server 2>/dev/null || true && \
     # rm -rf /opt/calibre/resources/images/mimetypes 2>/dev/null || true && \
-    echo "*** Calibre cleanup complete - calibredb only installation ***" \
+    # echo "*** Calibre cleanup complete - calibredb only installation ***" \
     ;; \
     "linux/arm64"|"linux/arm/v7"|"linux/arm/v6") \
     echo "Installing Calibre from system packages for ARM architecture (calibredb only)" && \
