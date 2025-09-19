@@ -24,6 +24,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     curl \
     jq \
+    libssl3 \
+    openssl \
     poppler-utils \
     python3-xdg \
     uuid-runtime \
@@ -160,18 +162,26 @@ FROM calibre-installer AS fanficfare-installer
 ARG FANFICFARE_VERSION
 RUN --mount=type=cache,target=/root/.cache/pip \
     set -e && \
-    echo "*** Install FanFicFare from TestPyPI ***" && \
-    INDEX_URL="https://test.pypi.org/simple/" && \
-    # Determine package specification
+    echo "*** Checking SSL support ***" && \
+    python3 -c "import ssl; print('SSL support available')" && \
+    echo "*** Install FanFicFare ***" && \
+    # Try TestPyPI first, then fallback to regular PyPI
     if [ -n "${FANFICFARE_VERSION}" ]; then \
-    PACKAGE_SPEC="FanFicFare==${FANFICFARE_VERSION}" && \
-    echo "Installing FanFicFare==${FANFICFARE_VERSION} from TestPyPI" ; \
+        PACKAGE_SPEC="FanFicFare==${FANFICFARE_VERSION}" && \
+        echo "Installing FanFicFare==${FANFICFARE_VERSION}" ; \
     else \
-    PACKAGE_SPEC="FanFicFare" && \
-    echo "Installing latest FanFicFare from TestPyPI" ; \
+        PACKAGE_SPEC="FanFicFare" && \
+        echo "Installing latest FanFicFare" ; \
     fi && \
-    # Install package
-    pip install --no-cache-dir -i "${INDEX_URL}" "${PACKAGE_SPEC}" && \
+    # Try TestPyPI first
+    echo "*** Attempting TestPyPI installation ***" && \
+    if pip install --no-cache-dir -i "https://test.pypi.org/simple/" --extra-index-url "https://pypi.org/simple/" "${PACKAGE_SPEC}"; then \
+        echo "*** FanFicFare installed from TestPyPI ***" ; \
+    else \
+        echo "*** TestPyPI failed, trying regular PyPI ***" && \
+        pip install --no-cache-dir "${PACKAGE_SPEC}" && \
+        echo "*** FanFicFare installed from PyPI ***" ; \
+    fi && \
     echo "*** FanFicFare installation complete ***"
 
 # Stage 6: Application code (changes with every code update)
