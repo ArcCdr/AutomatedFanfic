@@ -1,17 +1,21 @@
-[email]
-email = ""
-password = ""
-server = ""
-mailbox = ""
+[folder_watcher]
+folder_path = "/watch"
 sleep_time = 60
 ffnet_disable = false
+
+[smtp]
+server = ""
+port = 587
+username = ""
+password = ""
+from_email = ""
 
 [calibre]
 path=""
 username=""
 password=""
-default_ini=""
-personal_ini=""
+default_ini="/config/defaults.ini"
+personal_ini="/config/personal.ini"
 update_method="update"
 
 [pushbullet]
