@@ -101,36 +101,30 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     find /opt/calibre -name "calibredb" -type f -executable -exec ln -sf {} /usr/local/bin/calibredb \; && \
     # Configure library path for Calibre shared libraries
     echo "/opt/calibre/lib" >> /etc/ld.so.conf.d/calibre.conf && \
+    echo "/opt/calibre" >> /etc/ld.so.conf.d/calibre.conf && \
+    find /opt/calibre -name "*.so*" -type f -exec dirname {} \; | sort -u | while read libdir; do \
+        echo "$libdir" >> /etc/ld.so.conf.d/calibre.conf; \
+    done && \
     ldconfig && \
     echo "*** Calibre library configuration complete ***" && \
-    echo "*** Removing unnecessary Calibre components ***" && \
-    # Remove GUI applications (keep calibredb and essential launchers)
+    echo "*** Minimal Calibre cleanup - preserving calibredb dependencies ***" && \
+    # Only remove the most obvious GUI applications, keep everything else for safety
     rm -f /opt/calibre/calibre /opt/calibre/ebook-viewer /opt/calibre/ebook-edit 2>/dev/null || true && \
-    # Remove conversion tools (but keep metadata tools that calibredb might need)
-    rm -f /opt/calibre/ebook-convert /opt/calibre/ebook-polish 2>/dev/null || true && \
-    # Remove other command-line tools we don't use
-    rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp /opt/calibre/web2disk 2>/dev/null || true && \
-    rm -f /opt/calibre/lrf2lrs /opt/calibre/lrfviewer /opt/calibre/markdown-calibre 2>/dev/null || true && \
-    # Remove GUI Python packages (preserve core database and launcher libraries)
+    rm -f /opt/calibre/calibre-server /opt/calibre/calibre-smtp 2>/dev/null || true && \
+    # Remove only GUI Python packages that are clearly not needed
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/gui2 2>/dev/null || true && \
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/srv 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/conversion 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/oeb 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/devices 2>/dev/null || true && \
-    # Remove Qt libraries but preserve core shared libraries needed by calibredb
-    find /opt/calibre -name "*Qt*" -type f ! -name "*libcalibre*" -delete 2>/dev/null || true && \
-    find /opt/calibre -name "*qt*" -type f ! -name "*libcalibre*" -delete 2>/dev/null || true && \
-    find /opt/calibre -name "PyQt*" -type d -exec rm -rf {} + 2>/dev/null || true && \
-    # Remove resource directories for GUI components
+    # Remove only viewer/editor resources, keep everything else
     rm -rf /opt/calibre/resources/viewer 2>/dev/null || true && \
     rm -rf /opt/calibre/resources/editor 2>/dev/null || true && \
-    rm -rf /opt/calibre/resources/content-server 2>/dev/null || true && \
-    rm -rf /opt/calibre/resources/images/mimetypes 2>/dev/null || true && \
-    # Verify essential shared libraries are preserved
-    echo "*** Verifying essential Calibre libraries ***" && \
-    ls -la /opt/calibre/lib/ 2>/dev/null || echo "No lib directory found" && \
-    find /opt/calibre -name "*libcalibre*" -type f 2>/dev/null | head -10 && \
-    echo "*** Calibre cleanup complete - calibredb only installation ***" \
+    # Verify calibredb can run after cleanup
+    echo "*** Testing calibredb functionality ***" && \
+    /opt/calibre/calibredb --version && \
+    echo "*** Calibredb test successful ***" && \
+    # Show what libraries are available
+    echo "*** Available Calibre libraries ***" && \
+    find /opt/calibre -name "*.so*" -type f 2>/dev/null | head -20 && \
+    echo "*** Minimal Calibre cleanup complete ***" \
     ;; \
     "linux/arm64"|"linux/arm/v7"|"linux/arm/v6") \
     echo "Installing Calibre from system packages for ARM architecture (calibredb only)" && \
