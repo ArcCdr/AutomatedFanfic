@@ -111,7 +111,7 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     rm -f /opt/calibre/lrf2lrs /opt/calibre/lrfviewer /opt/calibre/markdown-calibre 2>/dev/null || true && \
     # Remove GUI Python packages and Qt libraries (preserve core database libraries)
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/gui2 2>/dev/null || true && \
-    rm -rf /opt/calibre/lib/python*/site-packages/calibre/srv 2>/dev/null || true && \
+    # rm -rf /opt/calibre/lib/python*/site-packages/calibre/srv 2>/dev/null || true && \
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/conversion 2>/dev/null || true && \
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/ebooks/oeb 2>/dev/null || true && \
     rm -rf /opt/calibre/lib/python*/site-packages/calibre/devices 2>/dev/null || true && \
@@ -122,8 +122,8 @@ RUN --mount=type=cache,target=/tmp/calibre-cache \
     # Remove resource directories for GUI components
     rm -rf /opt/calibre/resources/viewer 2>/dev/null || true && \
     rm -rf /opt/calibre/resources/editor 2>/dev/null || true && \
-    rm -rf /opt/calibre/resources/content-server 2>/dev/null || true && \
-    rm -rf /opt/calibre/resources/images/mimetypes 2>/dev/null || true && \
+    # rm -rf /opt/calibre/resources/content-server 2>/dev/null || true && \
+    # rm -rf /opt/calibre/resources/images/mimetypes 2>/dev/null || true && \
     echo "*** Calibre cleanup complete - calibredb only installation ***" \
     ;; \
     "linux/arm64"|"linux/arm/v7"|"linux/arm/v6") \
