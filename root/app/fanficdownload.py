@@ -140,12 +140,18 @@ def main() -> None:
 
     ff_logging.log("--- Configuration Details ---")
     try:
-        # Log Email Configuration - IMAP settings and processing behavior
-        ff_logging.log(f"  Email Account: {config.email.email or 'Not Specified'}")
-        ff_logging.log(f"  Email Server: {config.email.server or 'Not Specified'}")
-        ff_logging.log(f"  Email Mailbox: {config.email.mailbox}")
-        ff_logging.log(f"  Email Sleep Time: {config.email.sleep_time}")
-        ff_logging.log(f"  FFNet Disabled: {config.email.ffnet_disable}")
+        # Log Folder Watcher Configuration - Folder monitoring and processing behavior
+        ff_logging.log(f"  Folder Path: {config.folder_watcher.folder_path or 'Not Specified'}")
+        ff_logging.log(f"  Folder Check Interval: {config.folder_watcher.sleep_time}")
+        ff_logging.log(f"  FFNet Disabled: {config.folder_watcher.ffnet_disable}")
+
+        # Log SMTP Configuration - Email notification settings
+        if config.smtp.is_configured():
+            ff_logging.log(f"  SMTP Server: {config.smtp.server}")
+            ff_logging.log(f"  SMTP Port: {config.smtp.port}")
+            ff_logging.log(f"  SMTP Username: {config.smtp.username}")
+        else:
+            ff_logging.log("  SMTP: Not Configured")
 
         # Log Calibre Configuration - Library and processing settings
         ff_logging.log(f"  Calibre Path: {config.calibre.path or 'Not Specified'}")
@@ -187,8 +193,8 @@ def main() -> None:
     ff_logging.log("-----------------------------")
     # --- End Logging ---
 
-    # Initialize configurations for email monitoring and processing
-    email_info = url_ingester.EmailInfo(args.config)
+    # Initialize configurations for folder monitoring and processing
+    folder_info = url_ingester.FolderWatcherInfo(args.config)
 
     # Use ProcessManager for robust process handling with signal management
     with ProcessManager(config=config) as process_manager:
@@ -203,11 +209,11 @@ def main() -> None:
             cdb_info = calibre_info.CalibreInfo(args.config, manager)
             cdb_info.check_installed()
 
-            # Register email watcher process for URL ingestion
+            # Register folder watcher process for URL ingestion
             process_manager.register_process(
-                "email_watcher",
-                url_ingester.email_watcher,
-                args=(email_info, notification_info, queues),
+                "folder_watcher",
+                url_ingester.folder_watcher,
+                args=(folder_info, notification_info, queues),
             )
 
             # Register waiting watcher process for retry handling

@@ -74,25 +74,97 @@ class ConfigValidationError(Exception):
     pass
 
 
-class EmailConfig(BaseModel):
-    """Configuration model for email monitoring and authentication.
+class FolderWatcherConfig(BaseModel):
+    """Configuration model for folder-based URL monitoring.
 
-    This class defines the configuration structure for email-based fanfiction URL
-    monitoring. It handles IMAP server connection settings, authentication
-    credentials, and monitoring behavior. The model includes validation to ensure
-    proper email configuration and prevent common configuration errors.
+    This class defines the configuration structure for folder-based fanfiction URL
+    monitoring. It handles folder path, polling intervals, and processing behavior.
 
     Attributes:
-        email (str): Email authentication field (username only or full email address).
-        password (str): Password or app-specific password for email authentication.
-        server (str): IMAP server address (e.g., 'imap.gmail.com').
-        mailbox (str): Mailbox name to monitor for new emails (default: 'INBOX').
-        sleep_time (int): Interval in seconds between email checks (minimum: 1).
+        folder_path (str): Path to the folder to monitor for *.url files.
+        sleep_time (int): Interval in seconds between folder checks (minimum: 1).
         ffnet_disable (bool): Whether to disable FanFiction.Net processing.
+    """
 
-    Note:
-        Different email providers have different authentication requirements.
-        Some require just the username, while others require the full email address.
+    folder_path: str = Field(
+        default="", description="Path to folder containing *.url files"
+    )
+    sleep_time: int = Field(
+        default=60, ge=1, description="Sleep time between folder checks in seconds"
+    )
+    ffnet_disable: bool = Field(
+        default=True, description="Disable FanFiction.Net processing"
+    )
+
+    @field_validator("folder_path")
+    @classmethod
+    def validate_folder_path(cls, v):
+        """Validates and normalizes the folder path.
+
+        Args:
+            v (str): The folder path to validate.
+
+        Returns:
+            str: The validated and trimmed folder path.
+        """
+        return v.strip() if v else v
+
+    def is_configured(self) -> bool:
+        """Checks if folder watcher configuration is complete and ready for use.
+
+        Returns:
+            bool: True if folder_path is configured, False otherwise.
+        """
+        return bool(self.folder_path)
+
+
+class SMTPConfig(BaseModel):
+    """Configuration model for SMTP email notifications.
+
+    This class defines the configuration structure for SMTP-based email
+    notifications. It handles SMTP server connection settings and authentication.
+
+    Attributes:
+        server (str): SMTP server address (e.g., 'smtp.gmail.com').
+        port (int): SMTP server port (default: 587 for STARTTLS).
+        username (str): SMTP username for authentication.
+        password (str): SMTP password for authentication.
+        from_email (str): Email address to use as sender.
+    """
+
+    server: str = Field(default="", description="SMTP server address")
+    port: int = Field(default=587, description="SMTP server port")
+    username: str = Field(default="", description="SMTP username")
+    password: str = Field(default="", description="SMTP password")
+    from_email: str = Field(default="", description="From email address")
+
+    @field_validator("server")
+    @classmethod
+    def validate_server(cls, v):
+        """Validates and normalizes the server address.
+
+        Args:
+            v (str): The server address to validate.
+
+        Returns:
+            str: The validated and trimmed server address.
+        """
+        return v.strip() if v else v
+
+    def is_configured(self) -> bool:
+        """Checks if SMTP configuration is complete and ready for use.
+
+        Returns:
+            bool: True if all required fields are configured, False otherwise.
+        """
+        return bool(self.server and self.username and self.password and self.from_email)
+
+
+class EmailConfig(BaseModel):
+    """Legacy configuration model for backward compatibility.
+    
+    This is kept for compatibility but most functionality has been moved
+    to FolderWatcherConfig and SMTPConfig.
     """
 
     email: str = Field(
@@ -107,54 +179,6 @@ class EmailConfig(BaseModel):
     ffnet_disable: bool = Field(
         default=True, description="Disable FanFiction.Net processing"
     )
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v):
-        """Validates and normalizes the email field.
-
-        Different email providers have different authentication requirements:
-        some require just the username portion, while others require the full
-        email address including the @domain. Users should configure this field
-        according to their specific email provider's requirements.
-
-        Args:
-            v (str): The email value to validate.
-
-        Returns:
-            str: The validated and trimmed email value.
-        """
-        return v.strip() if v else v
-
-    @field_validator("server")
-    @classmethod
-    def validate_server(cls, v):
-        """Validates and normalizes the server address.
-
-        Trims whitespace from the server address to prevent connection issues
-        caused by inadvertent spacing. Allows empty values for development
-        or testing scenarios.
-
-        Args:
-            v (str): The server address to validate.
-
-        Returns:
-            str: The validated and trimmed server address.
-        """
-        return v.strip() if v else v
-
-    def is_configured(self) -> bool:
-        """Checks if email configuration is complete and ready for use.
-
-        Validates that all essential email configuration fields are provided
-        and non-empty, indicating that the email monitoring functionality
-        can be properly initialized.
-
-        Returns:
-            bool: True if email, password, and server are all configured,
-                False otherwise.
-        """
-        return bool(self.email and self.password and self.server)
 
 
 class CalibreConfig(BaseModel):
@@ -462,7 +486,9 @@ class AppConfig(BaseSettings):
     )
 
     # Configuration sections
-    email: EmailConfig
+    folder_watcher: FolderWatcherConfig
+    smtp: SMTPConfig = Field(default_factory=SMTPConfig)
+    email: EmailConfig = Field(default_factory=EmailConfig)  # Legacy compatibility
     calibre: CalibreConfig
     pushbullet: PushbulletConfig = Field(default_factory=PushbulletConfig)
     apprise: AppriseConfig = Field(default_factory=AppriseConfig)
@@ -577,9 +603,9 @@ class ConfigManager:
 
         try:
             # Validate required sections exist
-            if "email" not in toml_data:
+            if "folder_watcher" not in toml_data:
                 raise ConfigValidationError(
-                    "Missing required 'email' section in configuration"
+                    "Missing required 'folder_watcher' section in configuration"
                 )
             if "calibre" not in toml_data:
                 raise ConfigValidationError(

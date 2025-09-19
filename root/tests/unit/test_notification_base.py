@@ -13,6 +13,8 @@ from config_models import (
     CalibreConfig,
     AppriseConfig,
     PushbulletConfig,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 
 
@@ -24,6 +26,8 @@ class TestNotificationBase(unittest.TestCase):
             calibre=CalibreConfig(path="/tmp/calibre"),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
         )
 
         # Patch ConfigManager.load_config to return our mock config

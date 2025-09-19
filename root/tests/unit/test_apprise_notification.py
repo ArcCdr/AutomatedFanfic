@@ -13,6 +13,8 @@ from config_models import (
     PushbulletConfig,
     EmailConfig,
     CalibreConfig,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 
 
@@ -36,8 +38,10 @@ class TestAppriseNotification(unittest.TestCase):
     ):
         # Setup mock configuration
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(urls=input_urls),
             pushbullet=PushbulletConfig(),  # Default disabled
         )
@@ -75,8 +79,10 @@ class TestAppriseNotification(unittest.TestCase):
     ):
         # Setup mock config with empty apprise
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=apprise_config,
             pushbullet=pushbullet_config,
         )
@@ -97,8 +103,10 @@ class TestAppriseNotification(unittest.TestCase):
     def test_initialization_missing_urls_key(self, mock_load_config, MockGlobalApprise):
         # Setup mock config with empty apprise
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),  # Default empty
             pushbullet=PushbulletConfig(),
         )
@@ -117,8 +125,10 @@ class TestAppriseNotification(unittest.TestCase):
     def test_initialization_empty_urls_list(self, mock_load_config, MockGlobalApprise):
         # Setup mock config with empty URLs
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(urls=[]),  # Empty list
             pushbullet=PushbulletConfig(),
         )
@@ -156,8 +166,10 @@ class TestAppriseNotification(unittest.TestCase):
     ):
         # Setup mock config with enabled pushbullet
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(enabled=enabled, api_key=token, device=device),
         )
@@ -196,8 +208,10 @@ class TestAppriseNotification(unittest.TestCase):
             )
 
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=pushbullet_config,
         )
@@ -241,8 +255,10 @@ class TestAppriseNotification(unittest.TestCase):
     ):
         # Setup mock config
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(urls=["url1"]),
             pushbullet=PushbulletConfig(),
         )
@@ -270,8 +286,10 @@ class TestAppriseNotification(unittest.TestCase):
     ):
         # Setup mock config
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(urls=["url1"]),
             pushbullet=PushbulletConfig(),
         )
@@ -303,8 +321,10 @@ class TestAppriseNotification(unittest.TestCase):
     def test_send_notification_not_enabled(self, mock_load_config, MockGlobalApprise):
         # Setup mock config with no apprise or pushbullet
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),  # Empty
             pushbullet=PushbulletConfig(),  # Disabled
         )
@@ -325,8 +345,10 @@ class TestAppriseNotification(unittest.TestCase):
     def test_get_service_name(self, mock_load_config, MockGlobalApprise):
         # Setup minimal mock config
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path="/tmp/calibre"),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(),
         )

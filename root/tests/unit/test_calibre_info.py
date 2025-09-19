@@ -12,6 +12,8 @@ from config_models import (
     CalibreConfig,
     AppriseConfig,
     PushbulletConfig,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 
 
@@ -54,6 +56,7 @@ class TestCalibreInfo(unittest.TestCase):
     ):
         # Setup mock config
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(
                 path=path,
@@ -62,6 +65,7 @@ class TestCalibreInfo(unittest.TestCase):
                 default_ini=default_ini,
                 personal_ini=personal_ini,
             ),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(),
         )
@@ -96,8 +100,10 @@ class TestCalibreInfo(unittest.TestCase):
             return  # Exit early since we've tested the validation
 
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path=path),  # Empty path should cause error
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(),
         )
@@ -160,8 +166,10 @@ class TestCalibreInfo(unittest.TestCase):
     ):
         # Setup mock config with specified fields
         mock_config = AppConfig(
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
             email=EmailConfig(),
             calibre=CalibreConfig(path=path, username=username, password=password),
+            smtp=SMTPConfig(),
             apprise=AppriseConfig(),
             pushbullet=PushbulletConfig(),
         )

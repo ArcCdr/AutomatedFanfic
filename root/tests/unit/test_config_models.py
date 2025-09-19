@@ -8,6 +8,8 @@ from pydantic import ValidationError
 
 from config_models import (
     ConfigManager,
+    FolderWatcherConfig,
+    SMTPConfig,
     EmailConfig,
     CalibreConfig,
     PushbulletConfig,
@@ -24,13 +26,17 @@ class TestConfigModels(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.valid_toml_content = """
-[email]
-email = "testuser"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/path/to/url/files"
 sleep_time = 60
 ffnet_disable = true
+
+[smtp]
+server = "smtp.gmail.com"
+port = 587
+username = "testuser"
+password = "test_password"
+from_email = "test@example.com"
 
 [calibre]
 path = "/path/to/calibre"
@@ -73,13 +79,17 @@ path = "/path/to/calibre"
             (
                 "valid_complete_config",
                 """
-[email]
-email = "testuser"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/tmp/url_files"
 sleep_time = 60
 ffnet_disable = true
+
+[smtp]
+server = "smtp.gmail.com"
+port = 587
+username = "testuser"
+password = "test_password"
+from_email = "test@example.com"
 
 [calibre]
 path = "/path/to/calibre"
@@ -103,11 +113,8 @@ urls = ["discord://webhook_id/webhook_token"]
             (
                 "minimal_valid_config",
                 """
-[email]
-email = "testuser"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/tmp/url_files"
 
 [calibre]
 path = "/path/to/calibre"
@@ -117,7 +124,7 @@ path = "/path/to/calibre"
                 "",
             ),
             (
-                "missing_email_section",
+                "missing_folder_watcher_section",
                 """
 [calibre]
 path = "/path/to/calibre"
@@ -129,24 +136,19 @@ path = "/path/to/calibre"
             (
                 "missing_calibre_section",
                 """
-[email]
-email = "testuser"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/tmp/url_files"
 """,
                 True,
                 ConfigValidationError,
                 "",
             ),
             (
-                "valid_email_format_with_at",
+                "valid_folder_watcher_only",
                 """
-[email]
-email = "user@example.com"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/tmp/url_files"
+sleep_time = 30
 
 [calibre]
 path = "/path/to/calibre"
@@ -158,11 +160,8 @@ path = "/path/to/calibre"
             (
                 "negative_sleep_time",
                 """
-[email]
-email = "testuser"
-password = "test_password"
-server = "imap.gmail.com"
-mailbox = "INBOX"
+[folder_watcher]
+folder_path = "/tmp/url_files"
 sleep_time = -10
 
 [calibre]
@@ -175,11 +174,8 @@ path = "/path/to/calibre"
             (
                 "empty_required_fields",
                 """
-[email]
-email = ""
-password = ""
-server = ""
-mailbox = ""
+[folder_watcher]
+folder_path = ""
 
 [calibre]
 path = ""
@@ -372,8 +368,10 @@ path = ""
             config = ConfigManager.load_config(temp_path)
 
             # Verify all sections are properly loaded
-            self.assertEqual(config.email.email, "testuser")
-            self.assertEqual(config.email.server, "imap.gmail.com")
+            self.assertEqual(config.folder_watcher.folder_path, "/path/to/url/files")
+            self.assertEqual(config.folder_watcher.sleep_time, 60)
+            self.assertEqual(config.smtp.server, "smtp.gmail.com")
+            self.assertEqual(config.smtp.username, "testuser")
             self.assertEqual(config.calibre.path, "/path/to/calibre")
             self.assertTrue(config.pushbullet.enabled)
             self.assertEqual(len(config.apprise.urls), 2)

@@ -24,6 +24,8 @@ from config_models import (
     EmailConfig,
     CalibreConfig,
     ConfigManager,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 from process_manager import ProcessManager, ProcessState, ProcessInfo
 
@@ -97,6 +99,8 @@ class TestProcessManager(unittest.TestCase):
                 server="test.server.com",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(
                 shutdown_timeout=2.0,
                 health_check_interval=1.0,
@@ -427,6 +431,8 @@ class TestProcessManagerMonitoring(unittest.TestCase):
                 server="test.server.com",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(
                 health_check_interval=0.1,  # Very fast for testing
                 auto_restart=True,
@@ -485,6 +491,8 @@ class TestProcessManagerErrorHandling(unittest.TestCase):
                 server="test.server.com",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(),
         )
 

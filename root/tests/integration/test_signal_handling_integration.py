@@ -26,6 +26,8 @@ from config_models import (
     AppriseConfig,
     ProcessConfig,
     ConfigManager,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 from process_manager import ProcessManager
 
@@ -54,6 +56,8 @@ class TestSignalHandlingIntegration(unittest.TestCase):
             calibre=CalibreConfig(),
             pushbullet=PushbulletConfig(),
             apprise=AppriseConfig(),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(
                 enable_monitoring=False,  # Disable for simpler testing
                 auto_restart=False,

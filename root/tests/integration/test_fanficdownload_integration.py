@@ -37,6 +37,8 @@ from config_models import (
     AppriseConfig,
     ProcessConfig,
     ConfigManager,
+    FolderWatcherConfig,
+    SMTPConfig,
 )
 from process_manager import ProcessManager
 
@@ -141,6 +143,8 @@ class TestFanficdownloadIntegration(unittest.TestCase):
                         "server": "imap.test.com",
                     },
                     "calibre": {"path": "/test/path"},
+                    "folder_watcher": {"folder_path": "/tmp/url_folder"},
+                    "smtp": {},
                 },
                 "normal_operation",
                 True,
@@ -156,6 +160,17 @@ class TestFanficdownloadIntegration(unittest.TestCase):
                         "mailbox": "INBOX",
                         "sleep_time": 30,
                         "ffnet_disable": False,
+                    },
+                    "folder_watcher": {
+                        "folder_path": "/tmp/url_folder",
+                        "sleep_time": 60,
+                    },
+                    "smtp": {
+                        "server": "smtp.test.com",
+                        "port": 587,
+                        "username": "user",
+                        "password": "pass",
+                        "use_tls": True,
                     },
                     "calibre": {
                         "path": "/test/path",
@@ -352,6 +367,8 @@ class TestFanficdownloadIntegration(unittest.TestCase):
                 mailbox="INBOX",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(
                 enable_monitoring=config_data["enable_monitoring"],
                 auto_restart=config_data["auto_restart"],
@@ -525,6 +542,8 @@ class TestFanficdownloadIntegration(unittest.TestCase):
                 mailbox="INBOX",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(
                 shutdown_timeout=1.0,
                 health_check_interval=0.5,
@@ -650,6 +669,8 @@ class TestFanficdownloadIntegration(unittest.TestCase):
                 mailbox="INBOX",
             ),
             calibre=CalibreConfig(path="/test/path"),
+            folder_watcher=FolderWatcherConfig(folder_path="/tmp/url_folder"),
+            smtp=SMTPConfig(),
             process=ProcessConfig(shutdown_timeout=1.0),
             max_workers=2,
         )
