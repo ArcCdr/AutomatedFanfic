@@ -1,7 +1,7 @@
 # AutomatedFanfic
 Automated Fanfiction Download using FanficFare CLI
 
-This is a docker image to run the Automated FFF CLI, with pushbullet integration.
+This is a docker image to run the Automated FFF CLI, with notification integration. The application monitors a folder for URL files and automatically downloads fanfiction stories using FanFicFare.
 
 [FanFicFare](https://github.com/JimmXinu/FanFicFare)
 
@@ -9,6 +9,7 @@ This is a docker image to run the Automated FFF CLI, with pushbullet integration
 
 - [AutomatedFanfic](#automatedfanfic)
   - [Platform Support](#platform-support)
+  - [How It Works](#how-it-works)
   - [Site Support](#site-support)
   - [Repeats](#repeats)
   - [Calibre Setup](#calibre-setup)
@@ -16,7 +17,8 @@ This is a docker image to run the Automated FFF CLI, with pushbullet integration
     - [How to Install - Docker](#how-to-install---docker)
     - [How to Run - Non-Docker](#how-to-run---non-docker)
   - [Configuration](#configuration)
-    - [Email](#email)
+    - [Folder Watcher](#folder-watcher)
+    - [SMTP (Optional)](#smtp-optional)
     - [Calibre](#calibre)
     - [Pushbullet](#pushbullet)
     - [Apprise](#apprise)
@@ -29,6 +31,18 @@ This Docker image supports multi-platform deployment:
 - **linux/arm64** (ARM64): Uses system package manager Calibre installation
 
 The image automatically detects the target architecture during build and configures Calibre appropriately. Both platforms provide full functionality, though x86_64 may have slightly newer Calibre versions due to using official releases.
+
+## How It Works
+
+AutomatedFanfic monitors a specified folder for `*.url` files containing fanfiction URLs. When new files are detected:
+
+1. **File Detection**: The application scans the folder at regular intervals (configurable via `sleep_time`)
+2. **URL Extraction**: URLs are extracted from the files using FanFicFare's built-in URL parsing
+3. **Story Processing**: Each URL is queued for download/update based on your configuration
+4. **File Cleanup**: Successfully processed files are automatically deleted
+5. **Notifications**: Status updates and completion notifications are sent via your configured notification services
+
+This approach provides a simple, flexible way to queue stories for download - just drop a `.url` file in the folder and the application handles the rest!
 
 ## Site Support
 
@@ -57,9 +71,19 @@ If the `update_method` is set to `"update_no_force"` and a force update is reque
 1. Install the docker image with `docker pull mrtyton/automated-ffdl`
    - The image supports both x86_64 and ARM64 architectures
    - Docker will automatically pull the correct version for your platform
-2. Map the `/config` volume to someplace on your drive.
-3. After running the image once, it will have copied over default configs. Fill them out and everything should start working.
+2. Map the `/config` volume to someplace on your drive for configuration files
+3. Map a volume for the URL folder that the application will monitor (e.g., `-v /host/url/folder:/app/urls`)
+4. After running the image once, it will have copied over default configs. Fill them out and everything should start working.
    1. This default config is currently broken, so when you map the `/config` volume just copy over the default ones found in this repo.
+
+**Example Docker Run Command:**
+```bash
+docker run -d \
+  --name automated-fanfic \
+  -v /path/to/config:/config \
+  -v /path/to/url/folder:/app/urls \
+  mrtyton/automated-ffdl
+```
 
 ### How to Run - Non-Docker
 
@@ -68,38 +92,66 @@ If the `update_method` is set to `"update_no_force"` and a force update is reque
 3. Clone the Repo
 4. Run `python -m pip install -r requirements.txt`
 5. Install [FanficFare](https://github.com/JimmXinu/FanFicFare/wiki#command-line-interface-cli-version)
-6. Fill out the config.toml file
-7. Navigate to `root/app` and run `python fanficdownload.py`
+6. Fill out the config.toml file (copy from `root/config.default/config.toml`)
+7. Create a folder for URL files and set the `folder_path` in your config
+8. Navigate to `root/app` and run `python fanficdownload.py`
 
 ## Configuration
 
 The config file is a [TOML](https://toml.io/en/) file that contains the script's specific options. Changes to this file will only take effect upon script startup.
 
+### Folder Watcher
 
-### Email
-
-In order for the script to work, you have to fill out the email login information.
+The application monitors a specified folder for `*.url` files containing fanfiction URLs to download.
 
 ```toml
-[email]
-email = ""
-password = ""
-server = ""
-mailbox = ""
+[folder_watcher]
+folder_path = "/path/to/url/folder"
 sleep_time = 60
 ffnet_disable = false
 ```
 
+- `folder_path`: The path to the folder where the application will monitor for `*.url` files. **This field is required.**
+- `sleep_time`: How often to check the folder for new URL files, in seconds. Default is 60 seconds.
+- `ffnet_disable`: A boolean (`true`/`false`) to control behavior for FanFiction.Net (FFNet) URLs. Defaults to `false`. When `true`, FFNet URLs found in files will only trigger a notification (if configured) and will not be downloaded or processed further. If set to `false`, FFNet URLs will be processed like any other supported site. This is due to FFNet often having issues with automated access.
 
-- `email`: The email authentication field. Different email providers have different requirements:
-  - **Username only** (e.g., `username`): Required by some providers like Gmail
-  - **Full email address** (e.g., `username@domain.com`): Required by some providers like mailbox.org
-  - Use whichever format your email provider requires for IMAP authentication
-- `password`: The password to the email address. It is recommened that you use an app password (Google's page on [App Password](https://support.google.com/accounts/answer/185833?hl=en)), rather than your email's actual password.
-- `server`: Address for the email server. For Gmail, this is going to be `imap.gmail.com`. For other web services, you'll have to search for them.
-- `mailbox`: Which mailbox to check, such as `INBOX`, for the unread update emails.
-- `sleep_time`: How often to check the email account for new updates, in seconds. Default is 60 seconds, but you can make this as often as you want. Recommended that you don't go too fast though, since some email providers will not be happy.
-- `ffnet_disable`: A boolean (`true`/`false`) to control behavior for FanFiction.Net (FFNet) URLs. Defaults to `true`. When `true`, FFNet URLs found in emails will only trigger a notification (if configured) and will not be downloaded or processed further. If set to `false`, FFNet URLs will be processed like any other supported site. This is due to FFNet often having issues with automated access. The current versions of Flaresolver seem to mostly resolve this, so it defaults to `false.`
+**Usage Instructions:**
+1. Create text files with `.url` extensions in the monitored folder
+2. Each file should contain one or more fanfiction URLs (one per line)
+3. The application will automatically process these files and delete them after successful URL extraction
+4. If URL extraction fails, the file will be left in the folder for manual review
+
+### SMTP (Optional)
+
+Configure SMTP settings for sending email notifications. This section is optional and only needed if you want to receive email notifications.
+
+```toml
+[smtp]
+server = "smtp.gmail.com"
+port = 587
+username = "your_username"
+password = "your_app_password"
+from_email = "your_email@domain.com"
+use_tls = true
+```
+
+- `server`: SMTP server address (e.g., `smtp.gmail.com` for Gmail)
+- `port`: SMTP server port (typically 587 for TLS, 465 for SSL, or 25 for unencrypted)
+- `username`: Your email username (may be full email address depending on provider)
+- `password`: Your email password (app password recommended for Gmail and similar services)
+- `from_email`: The email address to use as the sender
+- `use_tls`: Whether to use TLS encryption (recommended: `true`)
+
+**Legacy Email Support:**
+For backward compatibility, an optional `[email]` section is still supported for SMTP notifications, but the new `[smtp]` section is preferred. The folder watcher has completely replaced email-based URL monitoring.
+
+**Migration from Email-Based Version:**
+If you're upgrading from the previous email-based version:
+1. Add the required `[folder_watcher]` section to your config.toml
+2. Create a folder for URL files and set `folder_path` to point to it  
+3. Optionally add `[smtp]` section if you want email notifications
+4. The old `[email]` section is no longer used for monitoring but can remain for legacy SMTP support
+5. Instead of sending URLs via email, create `.url` files in your monitored folder
 
 ### Calibre
 
